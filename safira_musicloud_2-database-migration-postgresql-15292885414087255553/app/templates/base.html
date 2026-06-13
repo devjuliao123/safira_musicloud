@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Safira MusiCloud{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="overlay" id="overlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3><i class="fas fa-cloud"></i> Safira MusiCloud</h3>
+        </div>
+        <div class="sidebar-divider"></div>
+        <ul class="sidebar-nav">
+            <li><a href="{{ url_for('main.menu') }}" class="nav-link {{ 'active' if request.endpoint == 'main.menu' }}"><i class="fas fa-home"></i> <span>Menu</span></a></li>
+            <li><a href="{{ url_for('main.people') }}" class="nav-link {{ 'active' if request.endpoint == 'main.people' }}"><i class="fas fa-user-friends"></i> <span>Pessoas</span></a></li>
+            <li><a href="{{ url_for('main.courses') }}" class="nav-link {{ 'active' if request.endpoint == 'main.courses' }}"><i class="fas fa-music"></i> <span>Cursos</span></a></li>
+            <li><a href="{{ url_for('main.schedule') }}" class="nav-link {{ 'active' if request.endpoint == 'main.schedule' }}"><i class="fas fa-calendar-alt"></i> <span>Agenda</span></a></li>
+            <li><a href="{{ url_for('main.attendance') }}" class="nav-link {{ 'active' if request.endpoint == 'main.attendance' }}"><i class="fas fa-check-square"></i> <span>Assinatura</span></a></li>
+            <li><a href="{{ url_for('main.finance') }}" class="nav-link {{ 'active' if request.endpoint == 'main.finance' }}"><i class="fas fa-dollar-sign"></i> <span>Financeiro</span></a></li>
+            <li style="margin-top: auto;"><a href="{{ url_for('auth.logout') }}" class="nav-link"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></a></li>
+        </ul>
+    </div>
+
+    <header>
+        <button class="menu-toggle" id="menu-toggle">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </button>
+        <div class="header-brand">
+            <a href="{{ url_for('main.menu') }}" class="brand-link">
+                <i class="fas fa-cloud"></i> Safira MusiCloud
+            </a>
+        </div>
+        <div class="user-info" style="margin-left: auto; display: flex; align-items: center;">
+            <span style="margin-right: 10px;">Olá, {{ session.username }}</span>
+            <i class="fas fa-user-circle fa-2x"></i>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <main>
+            <div class="container-fluid">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Flash Messages at Bottom -->
+    <div class="flash-messages-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'error' else 'info' }} alert-dismissible fade show shadow border-0" role="alert">
+                <i class="fas {{ 'fa-check-circle' if category == 'success' else 'fa-exclamation-circle' if category == 'error' else 'fa-info-circle' }} me-2"></i>
+                {{ message | upper }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

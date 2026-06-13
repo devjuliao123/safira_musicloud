@@ -1,0 +1,436 @@
+/* General Styles */
+:root {
+    --primary-blue: #002b5c; /* Azul Escuro */
+    --hover-blue: #004085;
+    --light-blue: #e7f1ff;
+    --bg-white: #ffffff;
+    --bg-light: #f8f9fa;
+    --text-dark: #333333;
+    --border-color: #dee2e6;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Header / Top Bar Styles */
+header {
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    background-color: var(--primary-blue);
+    color: white;
+    height: 50px; /* Reduced height */
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.menu-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-right: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 24px;
+    height: 18px;
+    position: relative;
+}
+
+.menu-toggle .bar {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background-color: white;
+    border-radius: 3px;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Hamburger Animation */
+.menu-toggle.active .bar:nth-child(1) {
+    transform: translateY(7.5px) rotate(45deg);
+}
+
+.menu-toggle.active .bar:nth-child(2) {
+    opacity: 0;
+}
+
+.menu-toggle.active .bar:nth-child(3) {
+    transform: translateY(-7.5px) rotate(-45deg);
+}
+
+.header-brand .brand-link {
+    text-decoration: none;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.2s;
+}
+
+.header-brand .brand-link:hover {
+    opacity: 0.8;
+}
+
+.user-info {
+    font-size: 0.9rem;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -250px;
+    width: 250px;
+    height: 100%;
+    background-color: var(--bg-white);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    transition: left 0.3s ease;
+    z-index: 1001;
+    color: var(--text-dark);
+}
+
+.sidebar.active {
+    left: 0;
+}
+
+.sidebar-header {
+    padding: 20px;
+    text-align: center;
+    color: var(--primary-blue);
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.sidebar-divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 0 15px;
+}
+
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+    flex-grow: 1;
+}
+
+.sidebar-nav li a {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: var(--text-dark);
+    transition: all 0.2s;
+}
+
+.sidebar-nav li a:hover {
+    background-color: var(--light-blue);
+    color: var(--primary-blue);
+}
+
+.sidebar-nav li a.active {
+    background-color: var(--light-blue);
+    color: var(--primary-blue);
+    font-weight: bold;
+}
+
+.sidebar-nav li a i {
+    margin-right: 15px;
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* Overlay */
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.overlay.active {
+    display: block;
+}
+
+/* Main Content Styles */
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+main {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #bbb;
+}
+
+.btn-primary {
+    background-color: var(--primary-blue) !important;
+    border-color: var(--primary-blue) !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--hover-blue) !important;
+    border-color: var(--hover-blue) !important;
+}
+
+.bg-blue {
+    background-color: var(--primary-blue) !important;
+}
+
+.text-blue {
+    color: var(--primary-blue) !important;
+}
+
+.breadcrumb-path {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+.breadcrumb-path a {
+    color: #6c757d;
+    text-decoration: none;
+}
+
+.breadcrumb-path a:hover {
+    color: var(--primary-blue);
+}
+
+.breadcrumb-path span {
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+.btn-subtle {
+    background: none;
+    border: none;
+    color: #ced4da;
+    font-size: 0.75rem;
+    padding: 0;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.btn-subtle:hover {
+    color: #adb5bd;
+}
+
+.btn-insert {
+    background-color: #f0f7ff;
+    border: 1px solid #cde4ff;
+    color: #0056b3;
+    font-size: 0.8rem;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.btn-insert:hover {
+    background-color: #e1f0ff;
+    color: #004085;
+    border-color: #b8d9ff;
+}
+
+.pagination-container {
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    background-color: #fff;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Modal Custom Enhancements */
+.modal-content-custom {
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-body-custom {
+    overflow-y: auto;
+    padding-right: 5px;
+    flex-grow: 1;
+}
+
+/* Uppercase Enforcement */
+input[type="text"], 
+input[type="email"], 
+textarea {
+    text-transform: uppercase;
+}
+
+::placeholder {
+    text-transform: none;
+}
+
+/* Animations & Interactions */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+#dataTable tbody tr {
+    opacity: 0;
+}
+
+.table-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    border-radius: 8px;
+}
+
+.spinner-blue {
+    color: var(--primary-blue);
+}
+
+.gear-icon {
+    transition: transform 0.3s ease;
+}
+
+.gear-icon:hover {
+    transform: rotate(90deg);
+    color: var(--primary-blue) !important;
+}
+
+.dropdown-item {
+    transition: background-color 0.2s, padding-left 0.2s;
+    color: #333333 !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    padding: 10px 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    text-decoration: none !important;
+}
+
+.dropdown-item i {
+    width: 20px;
+}
+
+.dropdown-item:hover {
+    padding-left: 1.5rem !important;
+    background-color: #f8f9fa !important;
+    color: var(--primary-blue) !important;
+}
+
+.dropdown-item.text-danger:hover {
+    color: #dc3545 !important;
+}
+
+.dropdown-menu {
+    min-width: 180px !important;
+    z-index: 1060;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid #dee2e6 !important;
+    background-color: white !important;
+    padding: 5px 0 !important;
+}
+
+/* Fix for dropdown clipping in table-responsive and cards */
+.table-responsive, .card, .card-body {
+    overflow: visible !important;
+}
+
+/* Ensure the row with an open dropdown is above others (Stacking Context Fix) */
+tr:has(.show), tr:has(.dropdown-menu.show) {
+    position: relative;
+    z-index: 1070;
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        overflow-x: auto !important;
+    }
+}
+
+/* Flash Messages Bottom Positioning (Snackbar style) */
+.flash-messages-container {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    width: auto;
+    min-width: 350px;
+    max-width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none; /* Allows clicking through the container, but alerts need pointer-events: auto */
+}
+
+.flash-messages-container .alert {
+    pointer-events: auto;
+    width: 100%;
+    text-align: center;
+    border-radius: 50px !important; /* Pill style snackbar */
+    padding: 10px 25px !important;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}

@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}Financeiro - Safira MusiCloud{% endblock %}
+
+{% block content %}
+<div class="breadcrumb-path">
+    <a href="{{ url_for('main.menu') }}">Menu</a> > <span>Controle Financeiro</span>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-success text-white p-3 border-0 shadow-sm">
+            <h6 class="text-uppercase small">Total Receitas</h6>
+            <h3>R$ {{ "%.2f"|format(total_receita) }}</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-danger text-white p-3 border-0 shadow-sm">
+            <h6 class="text-uppercase small">Total Despesas</h6>
+            <h3>R$ {{ "%.2f"|format(total_despesa) }}</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-primary text-white p-3 border-0 shadow-sm">
+            <h6 class="text-uppercase small">Saldo Atual</h6>
+            <h3>R$ {{ "%.2f"|format(saldo) }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="filter-bar mb-3">
+    <div class="input-group">
+        <input type="text" id="searchInput" class="form-control" placeholder="Pesquisar por descrição ou data...">
+        <button class="btn btn-outline-primary" type="button" id="filterBtn"><i class="fas fa-filter me-1"></i> Filtrar</button>
+    </div>
+</div>
+
+<div class="d-flex justify-content-start mb-2">
+    <button class="btn-insert" onclick="openModal('addModal')">Inserir</button>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="dataTable">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4" style="width: 5%;"></th>
+                        <th style="width: 15%;">Data</th>
+                        <th style="width: 35%;">Descrição</th>
+                        <th style="width: 15%;">Tipo</th>
+                        <th style="width: 15%;">Valor</th>
+                        <th style="width: 15%;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- JS carregar dados -->
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-container" id="pagination"></div>
+    </div>
+</div>
+
+<!-- Modal Adicionar -->
+<div id="addModal" class="modal-custom">
+    <div class="modal-content-custom">
+        <div class="modal-header-custom"><h5>NOVO LANÇAMENTO</h5><span class="close-custom" onclick="closeModal('addModal')">&times;</span></div>
+        <div class="modal-body-custom">
+            <form action="{{ url_for('main.add_transaction') }}" method="POST">
+                <div class="mb-3"><label class="form-label">DESCRIÇÃO</label><input type="text" name="description" class="form-control uppercase-input" required></div>
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">VALOR (R$)</label><input type="number" step="0.01" name="amount" class="form-control" required></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">TIPO</label><select name="type" class="form-select" required><option value="receita">RECEITA</option><option value="despesa">DESPESA</option></select></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">DATA</label><input type="date" name="date" class="form-control" required></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">STATUS</label><select name="status" class="form-select" required><option value="pago">PAGO / RECEBIDO</option><option value="pendente">PENDENTE</option></select></div>
+                </div>
+                <div class="text-end mt-4 mb-2"><button type="button" class="btn btn-secondary me-2" onclick="closeModal('addModal')">CANCELAR</button><button type="submit" class="btn btn-primary">SALVAR</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Delete -->
+<div id="deleteConfirmModal" class="modal-custom">
+    <div class="modal-content-custom" style="width: 400px; text-align: center;">
+        <div class="modal-header-custom justify-content-center"><h5 class="text-danger">CONFIRMAR EXCLUSÃO</h5></div>
+        <div class="modal-body-custom py-4"><p>DESEJA EXCLUIR ESTE LANÇAMENTO FINANCEIRO?</p></div>
+        <div class="d-flex justify-content-center gap-3 mt-3 mb-2">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('deleteConfirmModal')">CANCELAR</button>
+            <a id="confirmDeleteBtn" href="#" class="btn btn-danger">EXCLUIR</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const allData = [
+        {% for t in transactions %}
+        {
+            id: "{{ t.id }}",
+            descricao: "{{ t.descricao.replace('"', '\\"') }}",
+            valor: {{ t.valor }},
+            tipo: "{{ t.tipo }}",
+            data: "{{ t.data }}",
+            status: "{{ t.status }}"
+        },
+        {% endfor %}
+    ];
+
+    let filteredData = [];
+    const itemsPerPage = 10;
+    let currentPage = 1;
+
+    function renderTable() {
+        const tbody = document.querySelector('#dataTable tbody');
+        tbody.innerHTML = '';
+        if (filteredData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">Clique em 'Filtrar' para carregar os dados.</td></tr>`;
+            return;
+        }
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageData = filteredData.slice(start, end);
+
+        pageData.forEach((t, index) => {
+            const typeClass = t.tipo === 'receita' ? 'text-success' : 'text-danger';
+            const statusClass = t.status === 'PAGO' || t.status === 'RECEBIDO' ? 'badge bg-success' : 'badge bg-warning text-dark';
+            const row = `
+                <tr class="fade-in">
+                    <td class="ps-4 align-middle"><button class="btn btn-link text-danger p-0 border-0" onclick="confirmDelete('${t.id}')"><i class="fas fa-trash"></i></button></td>
+                    <td class="align-middle">${t.data}</td>
+                    <td class="align-middle"><strong>${t.descricao.toUpperCase()}</strong></td>
+                    <td class="align-middle text-uppercase small ${typeClass}">${t.tipo}</td>
+                    <td class="align-middle">R$ ${t.valor.toFixed(2)}</td>
+                    <td class="align-middle"><span class="${statusClass}">${t.status.toUpperCase()}</span></td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+        renderPagination();
+    }
+
+    function renderPagination() {
+        const container = document.getElementById('pagination');
+        container.innerHTML = '';
+        const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+        if (totalPages <= 1) return;
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.innerText = i;
+            btn.className = `btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-outline-primary'} me-1`;
+            btn.onclick = () => { currentPage = i; renderTable(); };
+            container.appendChild(btn);
+        }
+    }
+
+    document.getElementById('filterBtn').addEventListener('click', () => {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        filteredData = allData.filter(item => item.descricao.toLowerCase().includes(term) || item.data.includes(term));
+        currentPage = 1;
+        renderTable();
+    });
+
+    function openModal(id) { document.getElementById(id).style.display = "block"; }
+    function closeModal(id) { document.getElementById(id).style.display = "none"; }
+    function confirmDelete(id) { document.getElementById('confirmDeleteBtn').href = "/financeiro/deletar/" + id; openModal('deleteConfirmModal'); }
+    document.addEventListener('DOMContentLoaded', renderTable);
+</script>
+
+<style>
+    .modal-custom { display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+    .modal-content-custom { background-color: #fefefe; margin: 5% auto; padding: 20px; border-radius: 8px; width: 450px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .modal-header-custom { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 20px; }
+    .close-custom { font-size: 28px; font-weight: bold; cursor: pointer; }
+</style>
+{% endblock %}

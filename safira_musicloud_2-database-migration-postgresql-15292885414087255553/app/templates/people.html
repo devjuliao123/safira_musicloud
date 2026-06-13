@@ -1,0 +1,559 @@
+{% extends 'base.html' %}
+
+{% block title %}Pessoas - Safira MusiCloud{% endblock %}
+
+{% block content %}
+<div class="breadcrumb-path">
+    <a href="{{ url_for('main.menu') }}">Menu</a> > <span>Cadastro de Pessoas</span>
+</div>
+
+<div class="filter-bar mb-3">
+    <div class="input-group">
+        <input type="text" id="searchInput" class="form-control" placeholder="Pesquisar por nome, e-mail...">
+        <button class="btn btn-outline-primary" type="button" id="filterBtn">
+            <i class="fas fa-filter me-1"></i> Filtrar
+        </button>
+    </div>
+</div>
+
+<div class="d-flex justify-content-start mb-2">
+    <button class="btn-insert" onclick="openModal('addModal')">
+        Inserir
+    </button>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="dataTable" style="min-width: 800px;">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4" style="width: 5%;"></th>
+                        <th style="width: 10%;">ID</th>
+                        <th style="width: 30%;">Nome</th>
+                        <th style="width: 10%;">Tipo</th>
+                        <th style="width: 10%;">Status</th>
+                        <th style="width: 20%;">E-mail</th>
+                        <th style="width: 15%;">Telefone</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- JS vai carregar os dados aqui -->
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-container" id="pagination">
+            <!-- Pagination buttons will be injected here -->
+        </div>
+    </div>
+</div>
+
+<!-- Modal Adicionar -->
+<div id="addModal" class="modal-custom">
+    <div class="modal-content-custom">
+        <div class="modal-header-custom">
+            <h5>NOVA PESSOA</h5>
+            <span class="close-custom" onclick="closeModal('addModal')">&times;</span>
+        </div>
+        <div class="modal-body-custom">
+            <form action="{{ url_for('main.add_person') }}" method="POST">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label mb-1">NOME</label>
+                        <input type="text" name="name" class="form-control uppercase-input" required style="height: 40px;">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label mb-1">DATA DE NASCIMENTO</label>
+                        <input type="date" name="birth_date" class="form-control" style="height: 40px;">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">TIPO</label>
+                    <select name="type" class="form-select" onchange="toggleGuardianSection(this, 'addGuardianSection')" required>
+                        <option value="">SELECIONE...</option>
+                        <option value="student">ALUNO</option>
+                        <option value="teacher">PROFESSOR</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">E-MAIL</label>
+                    <input type="email" name="email" class="form-control uppercase-input">
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">TELEFONE</label>
+                        <input type="text" name="phone" class="form-control phone-mask" placeholder="(00) 00000-0000">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">CPF</label>
+                        <input type="text" name="cpf" class="form-control cpf-mask" placeholder="000.000.000-00" required>
+                    </div>
+                </div>
+
+                <div id="addGuardianSection" style="display: none;">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="has_guardian" id="addHasGuardian" onchange="toggleGuardianFields(this, 'addGuardianFields')">
+                        <label class="form-check-label" for="addHasGuardian">POSSUI RESPONSÁVEL?</label>
+                    </div>
+                    <div id="addGuardianFields" style="display: none;" class="p-3 bg-light border rounded mb-3">
+                        <div class="mb-3">
+                            <label class="form-label">NOME DO RESPONSÁVEL</label>
+                            <input type="text" name="guardian_name" class="form-control uppercase-input">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">TELEFONE DO RESPONSÁVEL</label>
+                                <input type="text" name="guardian_phone" class="form-control phone-mask" placeholder="(00) 00000-0000">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">CPF DO RESPONSÁVEL</label>
+                                <input type="text" name="guardian_cpf" class="form-control cpf-mask" placeholder="000.000.000-00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-end mt-4 mb-2">
+                    <button type="button" class="btn btn-secondary me-2" onclick="closeModal('addModal')">CANCELAR</button>
+                    <button type="submit" class="btn btn-primary">SALVAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div id="deleteConfirmModal" class="modal-custom">
+    <div class="modal-content-custom" style="width: 400px; text-align: center;">
+        <div class="modal-header-custom justify-content-center">
+            <h5 class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i> CONFIRMAR EXCLUSÃO</h5>
+        </div>
+        <div class="modal-body-custom py-4">
+            <p>TEM CERTEZA QUE DESEJA EXCLUIR ESTE CADASTRO?</p>
+            <p class="small text-muted">SE HOUVEREM VÍNCULOS, O SISTEMA IRÁ APENAS DESATIVÁ-LO.</p>
+        </div>
+        <div class="d-flex justify-content-center gap-3 mt-3 mb-2">
+            <button type="button" class="btn btn-secondary px-4" onclick="closeModal('deleteConfirmModal')">CANCELAR</button>
+            <a id="confirmDeleteBtn" href="#" class="btn btn-danger px-4">EXCLUIR</a>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div id="editModal" class="modal-custom">
+    <div class="modal-content-custom">
+        <div class="modal-header-custom">
+            <h5>EDITAR PESSOA</h5>
+            <span class="close-custom" onclick="closeModal('editModal')">&times;</span>
+        </div>
+        <div class="modal-body-custom">
+            <form id="editForm" method="POST">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label mb-1">NOME</label>
+                        <input type="text" name="name" id="editName" class="form-control uppercase-input" required style="height: 40px;">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label mb-1">DATA DE NASCIMENTO</label>
+                        <input type="date" name="birth_date" id="editBirthDate" class="form-control" style="height: 40px;">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">TIPO</label>
+                    <select name="type" id="editType" class="form-select" onchange="toggleGuardianSection(this, 'editGuardianSection')" required>
+                        <option value="student">ALUNO</option>
+                        <option value="teacher">PROFESSOR</option>
+                    </select>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">E-MAIL</label>
+                        <input type="email" name="email" id="editEmail" class="form-control uppercase-input">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">CPF</label>
+                        <input type="text" name="cpf" id="editCpf" class="form-control cpf-mask" placeholder="000.000.000-00" required>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">TELEFONE</label>
+                        <input type="text" name="phone" id="editPhone" class="form-control phone-mask" placeholder="(00) 00000-0000">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">STATUS</label>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" name="active" id="editActive" checked>
+                            <label class="form-check-label" for="editActive">ATIVO</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="editGuardianSection" style="display: none;">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="has_guardian" id="editHasGuardian" onchange="toggleGuardianFields(this, 'editGuardianFields')">
+                        <label class="form-check-label" for="editHasGuardian">POSSUI RESPONSÁVEL?</label>
+                    </div>
+                    <div id="editGuardianFields" style="display: none;" class="p-3 bg-light border rounded mb-3">
+                        <div class="mb-3">
+                            <label class="form-label">NOME DO RESPONSÁVEL</label>
+                            <input type="text" name="guardian_name" id="editGuardianName" class="form-control uppercase-input">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">TELEFONE DO RESPONSÁVEL</label>
+                                <input type="text" name="guardian_phone" id="editGuardianPhone" class="form-control phone-mask" placeholder="(00) 00000-0000">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">CPF DO RESPONSÁVEL</label>
+                                <input type="text" name="guardian_cpf" id="editGuardianCpf" class="form-control cpf-mask" placeholder="000.000.000-00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-end mt-4 mb-2">
+                    <button type="button" class="btn btn-secondary me-2" onclick="closeModal('editModal')">CANCELAR</button>
+                    <button type="submit" class="btn btn-primary">ATUALIZAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const allData = [
+        {% for pessoa in people %}
+        {
+            id: "{{ pessoa.id }}",
+            nome: "{{ pessoa.nome.replace('"', '\\"') }}",
+            tipo: "{{ 'student' if pessoa.tipo == 'aluno' else 'teacher' }}",
+            tipoOriginal: "{{ pessoa.tipo }}",
+            email: "{{ pessoa.email or '' }}",
+            telefone: "{{ pessoa.telefone or '' }}",
+            data_nascimento: "{{ pessoa.data_nascimento or '' }}",
+            possui_responsavel: {{ pessoa.possui_responsavel or 0 }},
+            nome_responsavel: "{{ (pessoa.nome_responsavel or '').replace('"', '\\"') }}",
+            telefone_responsavel: "{{ pessoa.telefone_responsavel or '' }}",
+            cpf: "{{ pessoa.cpf or '' }}",
+            cpf_responsavel: "{{ pessoa.cpf_responsavel or '' }}",
+            ativo: {{ pessoa.ativo or 1 }},
+            typeDisplay: "{{ 'Professor' if pessoa.tipo == 'professor' else 'Aluno' }}",
+            badgeClass: "{{ 'bg-info' if pessoa.tipo == 'professor' else 'bg-success' }}"
+        },
+        {% endfor %}
+    ];
+
+    let filteredData = [];
+    const itemsPerPage = 5;
+    let currentPage = 1;
+
+    function formatPhone(value) {
+        if (!value) return '-';
+        const cleaned = ('' + value).replace(/\D/g, '');
+        const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/);
+        if (match) {
+            return '(' + match[1] + ') ' + match[2] + '-' + match[3];
+        }
+        const match2 = cleaned.match(/^(\d{2})(\d{4})(\d{4})$/);
+        if (match2) {
+            return '(' + match2[1] + ') ' + match2[2] + '-' + match2[3];
+        }
+        return value;
+    }
+
+    function renderTable() {
+        const tbody = document.querySelector('#dataTable tbody');
+        tbody.innerHTML = '';
+        
+        if (filteredData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">Clique em 'Filtrar' para carregar os dados.</td></tr>`;
+            document.getElementById('pagination').innerHTML = '';
+            return;
+        }
+
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageData = filteredData.slice(start, end);
+
+        pageData.forEach((pessoa, index) => {
+            const statusBadge = pessoa.ativo === 1
+                ? '<span class="badge bg-success">ATIVO</span>'
+                : '<span class="badge bg-secondary">INATIVO</span>';
+            const rowClass = pessoa.ativo === 1 ? '' : 'text-muted opacity-75';
+
+            // Escape strings for onclick
+            const nameEscaped = pessoa.nome.replace(/'/g, "\\'");
+            const emailEscaped = pessoa.email.replace(/'/g, "\\'");
+            const gNameEscaped = pessoa.nome_responsavel.replace(/'/g, "\\'");
+
+            const row = `
+                <tr class="fade-in ${rowClass}" style="animation-delay: ${index * 0.05}s">
+                    <td class="ps-4 align-middle">
+                        <div class="dropdown">
+                            <button class="btn btn-link text-muted p-0 border-0 gear-icon" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <ul class="dropdown-menu shadow border">
+                                <li><a class="dropdown-item" href="#" onclick="openEditModal('${pessoa.id}', '${nameEscaped}', '${pessoa.tipo}', '${emailEscaped}', '${pessoa.telefone}', '${pessoa.data_nascimento}', ${pessoa.possui_responsavel}, '${gNameEscaped}', '${pessoa.telefone_responsavel}', ${pessoa.ativo}, '${pessoa.cpf}', '${pessoa.cpf_responsavel}'); return false;"><i class="fas fa-edit me-2 text-primary"></i> EDITAR</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="viewPerson('${pessoa.id}', '${nameEscaped}', '${pessoa.tipo}', '${emailEscaped}', '${pessoa.telefone}', '${pessoa.data_nascimento}', ${pessoa.possui_responsavel}, '${gNameEscaped}', '${pessoa.telefone_responsavel}', ${pessoa.ativo}, '${pessoa.cpf}', '${pessoa.cpf_responsavel}'); return false;"><i class="fas fa-eye me-2 text-info"></i> VISUALIZAR</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="confirmDelete('${pessoa.id}'); return false;"><i class="fas fa-trash me-2"></i> EXCLUIR</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                    <td class="align-middle text-muted">${pessoa.id}</td>
+                    <td class="align-middle">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-blue text-white d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px; flex-shrink: 0;">
+                                ${pessoa.nome[0].toUpperCase()}
+                            </div>
+                            <span class="text-truncate" style="max-width: 200px;"><strong>${pessoa.nome.toUpperCase()}</strong></span>
+                        </div>
+                    </td>
+                    <td class="align-middle">
+                        <span class="badge ${pessoa.badgeClass}" style="width: 80px;">
+                            ${pessoa.typeDisplay.toUpperCase()}
+                        </span>
+                    </td>
+                    <td class="align-middle">${statusBadge}</td>
+                    <td class="align-middle text-muted">${(pessoa.email || '-').toUpperCase()}</td>
+                    <td class="align-middle text-muted">${formatPhone(pessoa.telefone)}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+
+        renderPagination();
+    }
+
+    function renderPagination() {
+        const container = document.getElementById('pagination');
+        container.innerHTML = '';
+        const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+        if (totalPages <= 1) return;
+
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.innerText = i;
+            btn.className = `btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-outline-primary'}`;
+            btn.onclick = () => {
+                currentPage = i;
+                renderTable();
+            };
+            container.appendChild(btn);
+        }
+    }
+
+    document.getElementById('filterBtn').addEventListener('click', () => {
+        const btn = document.getElementById('filterBtn');
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Filtrando...';
+        btn.disabled = true;
+
+        setTimeout(() => {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            filteredData = allData.filter(item => 
+                item.nome.toLowerCase().includes(term) ||
+                item.email.toLowerCase().includes(term) ||
+                item.telefone.toLowerCase().includes(term)
+            );
+            currentPage = 1;
+            renderTable();
+            
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+        }, 400);
+    });
+
+    // Inicializar tabela vazia
+    document.addEventListener('DOMContentLoaded', () => {
+        renderTable();
+        
+        // Uppercase enforcement on input
+        document.addEventListener('input', (e) => {
+            if (e.target.classList.contains('uppercase-input')) {
+                e.target.value = e.target.value.toUpperCase();
+            }
+        });
+
+        // Ensure all forms convert data to uppercase before submit
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', () => {
+                form.querySelectorAll('input[type="text"], input[type="email"], textarea').forEach(input => {
+                    input.value = input.value.toUpperCase();
+                });
+            });
+        });
+    });
+
+    function openModal(id) {
+        document.getElementById(id).style.display = "block";
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).style.display = "none";
+    }
+
+    function toggleGuardianSection(selectElement, sectionId) {
+        const section = document.getElementById(sectionId);
+        if (selectElement.value === 'student') {
+            section.style.display = 'block';
+        } else {
+            section.style.display = 'none';
+        }
+    }
+
+    function toggleGuardianFields(checkbox, fieldsId) {
+        const fields = document.getElementById(fieldsId);
+        fields.style.display = checkbox.checked ? 'block' : 'none';
+    }
+
+    function applyPhoneMask(input) {
+        input.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            
+            if (value.length > 10) {
+                value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+            } else if (value.length > 6) {
+                value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+            } else if (value.length > 2) {
+                value = value.replace(/^(\d{2})(\d{0,5}).*/, '($1) $2');
+            } else if (value.length > 0) {
+                value = value.replace(/^(\d{0,2}).*/, '($1');
+            }
+            e.target.value = value;
+        });
+    }
+
+    function applyCpfMask(input) {
+        input.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+
+            if (value.length > 9) {
+                value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
+            } else if (value.length > 6) {
+                value = value.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, '$1.$2.$3');
+            } else if (value.length > 3) {
+                value = value.replace(/^(\d{3})(\d{0,3}).*/, '$1.$2');
+            }
+            e.target.value = value;
+        });
+    }
+
+    function openEditModal(id, nome, tipo, email, telefone, data_nascimento, possui_responsavel, nome_responsavel, telefone_responsavel, ativo, cpf, cpf_responsavel) {
+        const form = document.getElementById('editForm');
+        form.action = "/pessoas/editar/" + id;
+        document.getElementById('editName').value = nome;
+        document.getElementById('editType').value = tipo;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editPhone').value = telefone;
+        document.getElementById('editBirthDate').value = data_nascimento;
+        document.getElementById('editHasGuardian').checked = possui_responsavel === 1;
+        document.getElementById('editGuardianName').value = nome_responsavel;
+        document.getElementById('editGuardianPhone').value = telefone_responsavel;
+        document.getElementById('editActive').checked = ativo === 1;
+        document.getElementById('editCpf').value = cpf || '';
+        document.getElementById('editGuardianCpf').value = cpf_responsavel || '';
+        
+        // Handle visibility
+        toggleGuardianSection(document.getElementById('editType'), 'editGuardianSection');
+        toggleGuardianFields(document.getElementById('editHasGuardian'), 'editGuardianFields');
+
+        // Reset read-only status
+        document.getElementById('editName').readOnly = false;
+        document.getElementById('editBirthDate').readOnly = false;
+        document.getElementById('editType').disabled = false;
+        document.getElementById('editEmail').readOnly = false;
+        document.getElementById('editPhone').readOnly = false;
+        document.getElementById('editCpf').readOnly = false;
+        document.getElementById('editHasGuardian').disabled = false;
+        document.getElementById('editGuardianName').readOnly = false;
+        document.getElementById('editGuardianPhone').readOnly = false;
+        document.getElementById('editGuardianCpf').readOnly = false;
+        document.getElementById('editActive').disabled = false;
+        
+        document.querySelector('#editForm button[type="submit"]').style.display = "inline-block";
+        document.querySelector('#editModal h5').innerText = "Editar Pessoa";
+        
+        openModal('editModal');
+    }
+
+    function confirmDelete(id) {
+        document.getElementById('confirmDeleteBtn').href = "/pessoas/deletar/" + id;
+        openModal('deleteConfirmModal');
+    }
+
+    function viewPerson(id, nome, tipo, email, telefone, data_nascimento, possui_responsavel, nome_responsavel, telefone_responsavel, ativo, cpf, cpf_responsavel) {
+        openEditModal(id, nome, tipo, email, telefone, data_nascimento, possui_responsavel, nome_responsavel, telefone_responsavel, ativo, cpf, cpf_responsavel);
+        document.getElementById('editName').readOnly = true;
+        document.getElementById('editBirthDate').readOnly = true;
+        document.getElementById('editType').disabled = true;
+        document.getElementById('editEmail').readOnly = true;
+        document.getElementById('editPhone').readOnly = true;
+        document.getElementById('editCpf').readOnly = true;
+        document.getElementById('editHasGuardian').disabled = true;
+        document.getElementById('editGuardianName').readOnly = true;
+        document.getElementById('editGuardianPhone').readOnly = true;
+        document.getElementById('editGuardianCpf').readOnly = true;
+        document.getElementById('editActive').disabled = true;
+        
+        document.querySelector('#editForm button[type="submit"]').style.display = "none";
+        document.querySelector('#editModal h5').innerText = "Visualizar Pessoa";
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.phone-mask').forEach(applyPhoneMask);
+        document.querySelectorAll('.cpf-mask').forEach(applyCpfMask);
+    });
+
+    // Fechar modal ao clicar fora dele
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-custom')) {
+            event.target.style.display = "none";
+        }
+    }
+</script>
+
+<style>
+    .modal-custom {
+        display: none;
+        position: fixed;
+        z-index: 1050;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content-custom {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 500px;
+        max-width: 90%;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .modal-header-custom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .close-custom {
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .close-custom:hover {
+        color: #002b5c;
+    }
+    .bg-blue {
+        background-color: #002b5c;
+    }
+</style>
+{% endblock %}

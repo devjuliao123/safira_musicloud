@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Agenda do Dia - Safira MusiCloud{% endblock %}
+
+{% block content %}
+<div class="schedule-container">
+    {% if schedules %}
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Professor</th>
+                        <th>Horário</th>
+                        <th>Curso</th>
+                        <th>Sala</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in schedules %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-user-circle" style="color: var(--primary-blue); font-size: 1.5rem;"></i>
+                                <strong>{{ item.nome_professor }}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge-time">{{ item.hora_inicio }} - {{ item.hora_fim }}</span>
+                        </td>
+                        <td>{{ item.nome_curso }}</td>
+                        <td><i class="fas fa-door-open me-1 text-muted"></i> {{ item.sala or '-' }}</td>
+                        <td>
+                            <span class="status-indicator"></span> Disponível
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card" style="text-align: center; padding: 40px;">
+            <i class="fas fa-calendar-times fa-4x" style="color: #ccc; margin-bottom: 20px;"></i>
+            <h3>Nenhuma aula agendada para hoje ({{ today }}).</h3>
+            <p>Use o menu lateral para gerenciar as agendas dos professores.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .schedule-table th {
+        background-color: #f8f9fa;
+        padding: 15px 20px;
+        text-align: left;
+        border-bottom: 2px solid var(--border-color);
+        color: var(--primary-blue);
+        font-weight: 600;
+    }
+    .schedule-table td {
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .schedule-table tr:last-child td {
+        border-bottom: none;
+    }
+    .badge-time {
+        background-color: var(--light-blue);
+        color: var(--primary-blue);
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .status-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        background-color: #28a745;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+</style>
+{% endblock %}

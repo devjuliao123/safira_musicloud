@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Cursos - Safira MusiCloud{% endblock %}
+
+{% block content %}
+<div class="breadcrumb-path">
+    <a href="{{ url_for('main.menu') }}">Menu</a> > <span>Cadastro de Cursos</span>
+</div>
+
+<div class="filter-bar mb-3">
+    <div class="input-group">
+        <input type="text" id="searchInput" class="form-control" placeholder="Pesquisar por nome do curso...">
+        <button class="btn btn-outline-primary" type="button" id="filterBtn">
+            <i class="fas fa-filter me-1"></i> Filtrar
+        </button>
+    </div>
+</div>
+
+<div class="d-flex justify-content-start mb-2">
+    <button class="btn-insert" onclick="openModal('addModal')">
+        Inserir
+    </button>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="dataTable">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4" style="width: 5%;"></th>
+                        <th style="width: 10%;">ID</th>
+                        <th style="width: 45%;">Nome do Curso</th>
+                        <th style="width: 15%;">Carga Horária</th>
+                        <th style="width: 25%;">Professor Responsável</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- JS vai carregar os dados aqui -->
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-container" id="pagination"></div>
+    </div>
+</div>
+
+<!-- Modal Adicionar -->
+<div id="addModal" class="modal-custom">
+    <div class="modal-content-custom">
+        <div class="modal-header-custom">
+            <h5>NOVO CURSO</h5>
+            <span class="close-custom" onclick="closeModal('addModal')">&times;</span>
+        </div>
+        <div class="modal-body-custom">
+            <form action="{{ url_for('main.add_course') }}" method="POST">
+                <div class="mb-3">
+                    <label class="form-label">NOME DO CURSO</label>
+                    <input type="text" name="name" class="form-control uppercase-input" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">CARGA HORÁRIA (HORAS)</label>
+                    <input type="number" name="workload" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">PROFESSOR RESPONSÁVEL</label>
+                    <select name="teacher_id" class="form-select">
+                        <option value="">SELECIONE UM PROFESSOR...</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.id }}">{{ teacher.nome.upper() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="text-end mt-4 mb-2">
+                    <button type="button" class="btn btn-secondary me-2" onclick="closeModal('addModal')">CANCELAR</button>
+                    <button type="submit" class="btn btn-primary">SALVAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div id="editModal" class="modal-custom">
+    <div class="modal-content-custom">
+        <div class="modal-header-custom">
+            <h5>EDITAR CURSO</h5>
+            <span class="close-custom" onclick="closeModal('editModal')">&times;</span>
+        </div>
+        <div class="modal-body-custom">
+            <form id="editForm" method="POST">
+                <div class="mb-3">
+                    <label class="form-label">NOME DO CURSO</label>
+                    <input type="text" name="name" id="editName" class="form-control uppercase-input" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">CARGA HORÁRIA (HORAS)</label>
+                    <input type="number" name="workload" id="editWorkload" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">PROFESSOR RESPONSÁVEL</label>
+                    <select name="teacher_id" id="editTeacherId" class="form-select">
+                        <option value="">SELECIONE UM PROFESSOR...</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.id }}">{{ teacher.nome.upper() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="text-end mt-4 mb-2">
+                    <button type="button" class="btn btn-secondary me-2" onclick="closeModal('editModal')">CANCELAR</button>
+                    <button type="submit" class="btn btn-primary">ATUALIZAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div id="deleteConfirmModal" class="modal-custom">
+    <div class="modal-content-custom" style="width: 400px; text-align: center;">
+        <div class="modal-header-custom justify-content-center">
+            <h5 class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i> CONFIRMAR EXCLUSÃO</h5>
+        </div>
+        <div class="modal-body-custom py-4">
+            <p>TEM CERTEZA QUE DESEJA EXCLUIR ESTE CURSO?</p>
+        </div>
+        <div class="d-flex justify-content-center gap-3 mt-3 mb-2">
+            <button type="button" class="btn btn-secondary px-4" onclick="closeModal('deleteConfirmModal')">CANCELAR</button>
+            <a id="confirmDeleteBtn" href="#" class="btn btn-danger px-4">EXCLUIR</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const allData = [
+        {% for course in courses %}
+        {
+            id: "{{ course.id }}",
+            nome: "{{ course.nome.replace('"', '\\"') }}",
+            carga_horaria: "{{ course.carga_horaria or '-' }}",
+            professor_id: "{{ course.professor_id or '' }}",
+            nome_professor: "{{ (course.nome_professor or 'NÃO ATRIBUÍDO').replace('"', '\\"') }}"
+        },
+        {% endfor %}
+    ];
+
+    let filteredData = [];
+    const itemsPerPage = 5;
+    let currentPage = 1;
+
+    function renderTable() {
+        const tbody = document.querySelector('#dataTable tbody');
+        tbody.innerHTML = '';
+        
+        if (filteredData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted">Clique em 'Filtrar' para carregar os dados.</td></tr>`;
+            return;
+        }
+
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageData = filteredData.slice(start, end);
+
+        pageData.forEach((course, index) => {
+            const nameEscaped = course.nome.replace(/'/g, "\\'");
+            const row = `
+                <tr class="fade-in" style="animation-delay: ${index * 0.05}s">
+                    <td class="ps-4 align-middle">
+                        <div class="dropdown">
+                            <button class="btn btn-link text-muted p-0 border-0 gear-icon" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <ul class="dropdown-menu shadow border">
+                                <li><a class="dropdown-item" href="#" onclick="openEditModal('${course.id}', '${nameEscaped}', '${course.carga_horaria}', '${course.professor_id}'); return false;"><i class="fas fa-edit me-2 text-primary"></i> EDITAR</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="confirmDelete('${course.id}'); return false;"><i class="fas fa-trash me-2"></i> EXCLUIR</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                    <td class="align-middle text-muted">${course.id}</td>
+                    <td class="align-middle"><strong>${course.nome.toUpperCase()}</strong></td>
+                    <td class="align-middle">${course.carga_horaria} h</td>
+                    <td class="align-middle text-muted">${course.nome_professor.toUpperCase()}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+
+        renderPagination();
+    }
+
+    function renderPagination() {
+        const container = document.getElementById('pagination');
+        container.innerHTML = '';
+        const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+        if (totalPages <= 1) return;
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.innerText = i;
+            btn.className = `btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-outline-primary'} me-1`;
+            btn.onclick = () => { currentPage = i; renderTable(); };
+            container.appendChild(btn);
+        }
+    }
+
+    document.getElementById('filterBtn').addEventListener('click', () => {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        filteredData = allData.filter(item => item.nome.toLowerCase().includes(term));
+        currentPage = 1;
+        renderTable();
+    });
+
+    function openModal(id) { document.getElementById(id).style.display = "block"; }
+    function closeModal(id) { document.getElementById(id).style.display = "none"; }
+
+    function openEditModal(id, nome, carga_horaria, professor_id) {
+        const form = document.getElementById('editForm');
+        form.action = "/cursos/editar/" + id;
+        document.getElementById('editName').value = nome;
+        document.getElementById('editWorkload').value = carga_horaria === '-' ? '' : carga_horaria;
+        document.getElementById('editTeacherId').value = professor_id;
+        openModal('editModal');
+    }
+
+    function confirmDelete(id) {
+        document.getElementById('confirmDeleteBtn').href = "/cursos/deletar/" + id;
+        openModal('deleteConfirmModal');
+    }
+
+    document.addEventListener('DOMContentLoaded', renderTable);
+</script>
+
+<style>
+    .modal-custom { display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+    .modal-content-custom { background-color: #fefefe; margin: 10% auto; padding: 20px; border-radius: 8px; width: 450px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .modal-header-custom { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 20px; }
+    .close-custom { font-size: 28px; font-weight: bold; cursor: pointer; }
+</style>
+{% endblock %}
