@@ -528,19 +528,20 @@
         background-color: rgba(0,0,0,0.5);
     }
     .modal-content-custom {
-        background-color: #fefefe;
+        background-color: var(--modal-bg);
         margin: 5% auto;
         padding: 20px;
         border-radius: 8px;
         width: 500px;
         max-width: 90%;
         box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        color: var(--text-dark);
     }
     .modal-header-custom {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid #dee2e6;
+        border-bottom: 1px solid var(--border-color);
         padding-bottom: 10px;
         margin-bottom: 20px;
     }
@@ -553,7 +554,7 @@
         color: #002b5c;
     }
     .bg-blue {
-        background-color: #002b5c;
+        background-color: var(--primary-blue);
     }
 </style>
 {% endblock %}

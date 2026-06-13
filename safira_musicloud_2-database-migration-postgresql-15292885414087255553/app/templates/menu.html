@@ -53,7 +53,7 @@
         border-collapse: collapse;
     }
     .schedule-table th {
-        background-color: #f8f9fa;
+        background-color: var(--table-header-bg);
         padding: 15px 20px;
         text-align: left;
         border-bottom: 2px solid var(--border-color);
@@ -69,11 +69,15 @@
     }
     .badge-time {
         background-color: var(--light-blue);
-        color: var(--primary-blue);
+        color: var(--text-dark);
         padding: 5px 10px;
         border-radius: 20px;
         font-size: 0.85rem;
         font-weight: 600;
+    }
+
+    [data-theme="dark"] .badge-time {
+        color: white;
     }
     .status-indicator {
         display: inline-block;
